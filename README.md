@@ -39,7 +39,7 @@ Use setInterval to call the nextImage() function at regular intervals.
 Clean up the interval when the component unmounts using clearInterval to prevent memory leaks.
 
 ## PROGRAM
-```react
+```js
 app.jsx
 import ImageCarousel from './ImageCarousel';
 
@@ -77,7 +77,7 @@ function App() {
 
 export default App;
 ```
-```react
+```js
 ImageCarouel
 import { useState, useEffect } from 'react';
 import './ImageCarousel.css';
