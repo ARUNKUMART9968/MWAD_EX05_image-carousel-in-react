@@ -39,9 +39,263 @@ Use setInterval to call the nextImage() function at regular intervals.
 Clean up the interval when the component unmounts using clearInterval to prevent memory leaks.
 
 ## PROGRAM
+```react
+app.jsx
+import ImageCarousel from './ImageCarousel';
 
+function App() {
+  const carouselImages = [
+    {
+      src: "/images/image1.jpg",
+      alt: "Image 1",
+    },
+    {
+      src: "/images/image2.jpg",
+      alt: "Image 2",
+    },
+    {
+      src: "/images/image3.jpg",
+      alt: "Image 3",
+    },
+    {
+      src: "/images/image2.jpg", // Repeated image is okay
+      alt: "Image 4",
+    }
+  ];
+
+  return (
+    <div className="app">
+      <h1>React Image Carousel</h1>
+      <ImageCarousel 
+        images={carouselImages}
+        autoPlayInterval={5000}
+        showControls={true}
+      />
+    </div>
+  );
+}
+
+export default App;
+```
+```react
+ImageCarouel
+import { useState, useEffect } from 'react';
+import './ImageCarousel.css';
+
+const ImageCarousel = ({ images, autoPlayInterval = 3000, showControls = true }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  // Handle automatic sliding
+  useEffect(() => {
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, autoPlayInterval);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isPlaying, images.length, autoPlayInterval]);
+
+  // Navigation functions
+  const goToPrevious = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
+  // Toggle play/pause
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <div className="carousel-container">
+      <div className="carousel-inner">
+        {images.map((image, index) => (
+          <div 
+            key={index} 
+            className={`carousel-item ${index === currentIndex ? 'active' : ''}`}
+          >
+            <img src={image.src} alt={image.alt || `Slide ${index + 1}`} />
+            {image.caption && <div className="carousel-caption">{image.caption}</div>}
+          </div>
+        ))}
+      </div>
+      
+      {showControls && (
+        <div className="carousel-controls">
+          <button className="carousel-control prev" onClick={goToPrevious}>
+            &lt;
+          </button>
+          <button 
+            className="carousel-control play-pause" 
+            onClick={togglePlayPause}
+          >
+            {isPlaying ? '❚❚' : '▶'}
+          </button>
+          <button className="carousel-control next" onClick={goToNext}>
+            &gt;
+          </button>
+        </div>
+      )}
+      
+      <div className="carousel-indicators">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
+            onClick={() => goToSlide(index)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ImageCarousel;
+```
+```css
+/* ImageCarousel.css */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-inner {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}
+
+.carousel-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-item.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+/* Controls */
+.carousel-controls {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+.carousel-control {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background-color 0.3s;
+}
+
+.carousel-control:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.carousel-control.prev {
+  margin-left: 10px;
+}
+
+.carousel-control.next {
+  margin-right: 10px;
+}
+
+.carousel-control.play-pause {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+}
+
+/* Indicators */
+.carousel-indicators {
+  position: absolute;
+  bottom: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  z-index: 2;
+}
+
+.carousel-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.carousel-indicator:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.carousel-indicator.active {
+  background-color: white;
+}
+```
 
 ## OUTPUT
+![Screenshot 2025-05-01 172420](https://github.com/user-attachments/assets/4ede1ed2-0e11-416c-b6b6-0999c715fa50)
 
 
 ## RESULT
